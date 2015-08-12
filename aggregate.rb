@@ -6,6 +6,10 @@ require 'redis-objects'
 require 'activerecord'
 require 'connection_pool'
 
+Dir[File.dirname(__FILE__) + '../lib*.rb'].each do |file|
+	require File.basename(file, File.extname(file))
+end
+
 $options = {}
 $options[:host] = '10.0.1.17'
 $options[:db] = 1
