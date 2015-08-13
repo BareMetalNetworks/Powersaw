@@ -42,19 +42,6 @@ ActiveRecord::Schema.define do
 
 	end
 
-	create_table :pages, force: true do |t|
-		t.integer :id
-		t.integer :pagenum
-		t.integer :document_id
-	end
-
-	create_table :words, force: true do |t|
-		t.integer :id
-		t.string :term
-		t.integer :page_id
-
-	end
-
 	add_index "wordlists", ["page_id"], :name=> "doc_pages_words"
 
 end
