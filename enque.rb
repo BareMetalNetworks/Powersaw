@@ -21,6 +21,7 @@ Redis::Objects.redis = ConnectionPool.new(size: 5, timeout: 5) {
 
 $r = Redis::List.new('system:log', :marshall => true, :expiration => 5)
 
+begin
 open($options[:hookLog]) do |file|
 	file.seek(0, IO::SEEK_END)
 	loop do
@@ -28,8 +29,15 @@ open($options[:hookLog]) do |file|
 		unless changes.empty?
 			p "#{Time.now} #{changes}" if $DEBUG
 		$logger.info "#{Time.now}: Logged -> #{changes}"
+
 			$r << changes
 		end
-	 sleep 1.0
+	 sleep 10
 	end
+end
+
+rescue => err
+	$logger.info "#{Time.now}: Error #{err.inspect}\n Backtrace #{err.backtrace}"
+	sleep 300
+	retry
 end
