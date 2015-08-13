@@ -43,7 +43,6 @@ ActiveRecord::Schema.define do
 	end
 
 	add_index "wordlists", ["page_id"], :name=> "doc_pages_words"
-
 end
 
 # Define the models
