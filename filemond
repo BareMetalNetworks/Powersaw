@@ -1,0 +1,12 @@
+require 'daemons'
+#require 'logger'
+
+#`mkdir -p ~/log/reckful/`
+#logger = Logger.new('~/log/reckful/notifyd.log')
+#logger.info "#{Time.now}: Starting Silicon Tooling Reckful notifyd daemon"
+#logger.close
+Daemons.run('enque.rb')
+
+
+# remove .rb from filename so you can put in PATH and run like a real daemon
+# ruby notifyd start|stop|restart
