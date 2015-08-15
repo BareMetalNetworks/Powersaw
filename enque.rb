@@ -23,6 +23,8 @@ Redis::Objects.redis = ConnectionPool.new(size: 5, timeout: 5) {
 
 $r = Redis::List.new('system:log', :marshall => true, :expiration => 5)
 
+$r = Redis::List.new('system:log:archive', :marshall => true)
+
 
 
 
@@ -31,17 +33,21 @@ $r = Redis::List.new('system:log', :marshall => true, :expiration => 5)
 
  #begin
 	hook = INotify::Notifier.new
-	hook.watch "/etc/", :create, :delete, :modify do |event|
+    tim = "#{Time.now}: "
+    fil = " Filename: #{event.name} "
 		 p "Event name: #{event.name} \n Event Methods: #{event.methods.sort}"
 		 if event.flags.include? :create
-			     $r << event.name
+			     $r << "#{tim} File created. #{fil}"
 		 end
 
 		 if event.flags.include? :delete
-
+			  $r << "#{tim} File deleted. #{fil}"
+			  $archive << "#{tim} #{fil} : Deleted"
 		 end
 
 		 if event.flags.include? :modify
+			 $r << "#{tim} File #{fil} : Was modified"
+			 $archive << "#{tim} #{fil} : Modified"
 
 		 end
 		 sleep 5
