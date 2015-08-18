@@ -92,12 +92,20 @@ begin
 
  #begin
 	hook = INotify::Notifier.new
-		hook.watch("/etc/", :create, :delete, :modify, :access, :moved_from)
+		hook.watch("/etc/", :create, :delete, :modify, :access, :moved_from) do |event|
+
+
 
 		 p "Event name: #{event.name} \n Event Methods: #{event.methods.sort}"
 	   parser(event)
 		 sleep 5
-	end
+		end
+
+	hook.run
+
+end
+
+
 
 # rescue => err
 #	$logger.info "#{Time.now}: #{err.inspect} backtrace: #{err.backtrace}"
@@ -135,6 +143,6 @@ __END__
 #	sleep 300
 #	retry
 #end
-#cephlexin}
+#}
 #	end
 
