@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require 're is'
+require 'redis'
 require 'redis-objects'
 require 'connection_pool'
 require 'logger'
@@ -24,12 +24,6 @@ $r = Redis::List.new('system:log', :marshal => true, :expiration => 5)
 $spool = Redis::List.new('system:log:spool', :marshal => true)  # for end of day mailer
 
 $archive = Redis::List.new('system:log:archive', :marshal => true)
-
-def mailer(msg, address)
-	sleep 5
-	`echo #{msg} | /usr/bin/ssmtp #{address}`
-
-end
 
 def bench(name)
  elapsed =  Benchmark.realtime {yield}
@@ -57,22 +51,19 @@ def parser event
 	if event.flags.include? :delete
 		$r << "#{tim} File deleted: #{fil}"
 		$archive << "#{tim} #{fil}: Deleted"
-		sleep 5
-		mailer(message, "transiencymail@gmail.com")
-		sleep 5
-		mailer(message, "support@baremetalnetworks.com")
-
+	  $spool << "#{tim} #{fil}: Deleted"
 	end
 
 	if event.flags.include? :modify
 		$r << "#{tim} File #{fil} : Was modified"
 		$archive << "#{tim} #{fil} : Modified"
-
+		$spool << "#{tim} #{fil}: Modified"
 	end
+
 	if event.flags.include? :moved_from
 		$r << "#{tim} File #{fil} : Was modified"
-		$archive << "#{tim} #{fil} : Modified"
-
+		$archive << "#{tim} #{fil} : Moved from"
+		$spool << "#{tim} #{fil}: Moved from"
 	end
 	if event.flags.include? :access
 		$r << "#{tim} File #{fil} : Was modified"
@@ -83,14 +74,6 @@ end
 
 begin
 
-	while true do
-
-
-#dirHookEtc = Thread.new{
-
-		end
-
- #begin
 	hook = INotify::Notifier.new
 		hook.watch("/etc/", :create, :delete, :modify, :access, :moved_from) do |event|
 
@@ -102,6 +85,10 @@ begin
 		end
 
 	hook.run
+
+
+rescue => err
+	$logger.info "#{Time.now}: Error: #{err.inspect}"
 
 end
 
