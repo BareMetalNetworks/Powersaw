@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require 'redis'
+require 're is'
 require 'redis-objects'
 require 'connection_pool'
 require 'logger'
