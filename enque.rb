@@ -18,7 +18,7 @@ $DEBUG = true
 $logger = Logger.new('enque.log', 'a+')
 
 Redis::Objects.redis = ConnectionPool.new(size: 5, timeout: 5) {
-	Redis.new({host: $options[:host], port: $options[:port], db: $options[:db], logger: true})}
+	Redis.new({host: $options[:host], port: $options[:port], db: $options[:db]})}
 
 $r = Redis::List.new('system:log', :marshal => true, :expiration => 5)
 $spool = Redis::List.new('system:log:spool', :marshal => true)  # for end of day mailer
@@ -26,15 +26,15 @@ $spool = Redis::List.new('system:log:spool', :marshal => true)  # for end of day
 $archive = Redis::List.new('system:log:archive', :marshal => true)
 
 def bench(name)
- elapsed =  Benchmark.realtime {yield}
- return "%s: %.2fs" % [name, elapsed]
-  end
+	elapsed =  Benchmark.realtime {yield}
+	return "%s: %.2fs" % [name, elapsed]
+end
 
 def forker(brock)
-pid = fork do
-	yield
-end
-Process.detach(pid)
+	pid = fork do
+		yield
+	end
+	Process.detach(pid)
 end
 
 $resultFactory = lambda  {|x,y|  return "#{Time.now}: File #{x}, #{y} action(s) have been executed as a result" }
@@ -51,7 +51,7 @@ def parser event
 	if event.flags.include? :delete
 		$r << "#{tim} File deleted: #{fil}"
 		$archive << "#{tim} #{fil}: Deleted"
-	  $spool << "#{tim} #{fil}: Deleted"
+		$spool << "#{tim} #{fil}: Deleted"
 	end
 
 	if event.flags.include? :modify
@@ -75,14 +75,14 @@ end
 begin
 
 	hook = INotify::Notifier.new
-		hook.watch("/etc/", :create, :delete, :modify, :access, :moved_from) do |event|
+	hook.watch("/etc/", :create, :delete, :modify, :moved_from) do |event|
 
 
 
-		 p "Event name: #{event.name} \n Event Methods: #{event.methods.sort}"
-	   parser(event)
-		 sleep 5
-		end
+		p "Event name: #{event.name} \n"
+		parser(event)
+		#	sleep 5
+	end
 
 	hook.run
 
@@ -91,6 +91,47 @@ rescue => err
 	$logger.info "#{Time.now}: Error: #{err.inspect}"
 
 end
+
+
+
+# rescue => err
+#	$logger.info "#{Time.now}: #{err.inspect} backtrace: #{err.backtrace}"
+#end
+
+
+#}
+
+#dirHookEtc.Thread.join
+
+#logHook.Thread.join
+
+
+__END__
+#def hook_log_file
+## this is the file hook thread
+#logHook = Thread.new{
+#begin
+# open($options[:hookLog]) do |file|
+# 	file.seek(0, IO::SEEK_END)
+# 	loop do
+# 		changes = file.read
+# 		unless changes.empty?
+# 			p "#{Time.now} #{changes}" if $DEBUG
+# 		$logger.info "#{Time.now}: Logged -> #{changes}"
+#
+# 			$r << changes
+# 		end
+# 	 sleep 10
+# 	end
+# end
+
+#rescue => err
+#	$logger.info "#{Time.now}: Error #{err.inspect}\n Backtrace #{err.backtrace}"
+#	sleep 300
+#	retry
+#end
+#}
+#	end
 
 
 
